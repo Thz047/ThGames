@@ -157,7 +157,7 @@
                 pixKeyLabel: "Chave E-mail",
                 copyBtn: "Copiar Chave",
                 copiedBtn: "Copiado!",
-                thanksMsg: "Obrigado por apoiar!",
+                thanksMsg: "Pequenas ajudas geram grandes códigos!",
                 langBtn: "EN ",
                 changeGame: "MUDAR DE JOGO"
             },
@@ -180,7 +180,7 @@
                 pixKeyLabel: "Email Key",
                 copyBtn: "Copy Key",
                 copiedBtn: "Copied!",
-                thanksMsg: "Thank you for supporting!",
+                thanksMsg: "Small helps create great code!",
                 langBtn: "PT ",
                 changeGame: "CHANGE GAME"
             }
@@ -225,15 +225,10 @@
                 return null;
             }, []);
 
-            // MOTOR IMBATÍVEL: Minimax com simulação de remoção de peças (Modo Infinito)
             const minimax = useCallback((currentBoard, currentXMoves, currentOMoves, depth, isMaxing, alpha, beta) => {
                 const win = checkWinner(currentBoard);
-                
-                // Oponente 'O' (IA) quer maximizar score, Humano 'X' quer minimizar
                 if (win?.player === 'O') return 100 - depth;
                 if (win?.player === 'X') return depth - 100;
-                
-                // Profundidade máxima de busca para evitar lag, mas suficiente para o jogo 3x3 infinito
                 if (depth >= 9) return 0;
 
                 const available = [];
@@ -246,16 +241,12 @@
                     for (let i of available) {
                         let nextBoard = [...currentBoard];
                         let nextOMoves = [...currentOMoves];
-                        
-                        // Lógica Infinita: Se já existem 3 peças, a mais antiga desaparece ANTES da jogada ser processada no minimax
                         if (nextOMoves.length === 3) {
                             const removedIdx = nextOMoves.shift();
                             nextBoard[removedIdx] = null;
                         }
-                        
                         nextBoard[i] = 'O';
                         nextOMoves.push(i);
-                        
                         let score = minimax(nextBoard, currentXMoves, nextOMoves, depth + 1, false, alpha, beta);
                         bestScore = Math.max(bestScore, score);
                         alpha = Math.max(alpha, bestScore);
@@ -267,16 +258,12 @@
                     for (let i of available) {
                         let nextBoard = [...currentBoard];
                         let nextXMoves = [...currentXMoves];
-                        
-                        // Lógica Infinita para o oponente humano
                         if (nextXMoves.length === 3) {
                             const removedIdx = nextXMoves.shift();
                             nextBoard[removedIdx] = null;
                         }
-                        
                         nextBoard[i] = 'X';
                         nextXMoves.push(i);
-                        
                         let score = minimax(nextBoard, nextXMoves, currentOMoves, depth + 1, true, alpha, beta);
                         bestScore = Math.min(bestScore, score);
                         beta = Math.min(beta, bestScore);
@@ -336,49 +323,34 @@
                 setScores({ X: 0, O: 0 });
             };
 
-            // Loop de execução da IA
             useEffect(() => {
                 if (aiConfig.enabled && !isXNext && !roundWinner && !isAiThinking) {
                     setIsAiThinking(true);
-                    
                     const timer = setTimeout(() => {
                         const available = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
                         if (available.length === 0) { setIsAiThinking(false); return; }
-                        
                         let bestMove;
                         let bestScore = -Infinity;
-
-                        // Analisa cada jogada possível usando o Minimax corrigido
                         for (let i of available) {
                             let tempBoard = [...board];
                             let tempOMoves = [...oMoves];
-                            
-                            // Aplica a lógica de remoção de peça para a simulação do primeiro nível
                             if (tempOMoves.length === 3) {
                                 const removedIdx = tempOMoves.shift();
                                 tempBoard[removedIdx] = null;
                             }
-                            
                             tempBoard[i] = 'O';
                             tempOMoves.push(i);
-                            
-                            // Chama o minimax para prever o futuro (humano joga em seguida)
                             let score = minimax(tempBoard, xMoves, tempOMoves, 0, false, -Infinity, Infinity);
-                            
-                            // Bónus estratégico para o centro e cantos
                             if (i === 4) score += 0.1;
                             if ([0, 2, 6, 8].includes(i)) score += 0.05;
-
                             if (score > bestScore) {
                                 bestScore = score;
                                 bestMove = i;
                             }
                         }
-                        
                         if (bestMove !== undefined) handlePlay(bestMove);
                         setIsAiThinking(false);
                     }, aiConfig.speed);
-                    
                     return () => clearTimeout(timer);
                 }
             }, [isXNext, aiConfig.enabled, roundWinner, board, minimax, aiConfig.speed, xMoves, oMoves, handlePlay]);
@@ -522,7 +494,7 @@
 
                     {showSupport && (
                         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowSupport(false)}>
-                            <div className="glass-panel bg-[#0a0f1e] w-full max-w-sm p-8 text-center space-y-6" onClick={e => e.stopPropagation()}>
+                            <div className="glass-panel bg-[#0a0f1e] w-full max-w-sm p-8 text-center space-y-6 border border-amber-500/20" onClick={e => e.stopPropagation()}>
                                 <h2 className="text-amber-400 font-black uppercase text-sm tracking-widest">{t.pixTitle}</h2>
                                 <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
                                     <span className="text-[11px] font-bold text-blue-400 break-all block">contato.th047@gmail.com</span>
@@ -530,7 +502,9 @@
                                         {copySuccess ? t.copiedBtn : t.copyBtn}
                                     </button>
                                 </div>
-                                <p className="text-[10px] text-slate-400 italic">{t.thanksMsg}</p>
+                                <p className="text-[11px] text-amber-200/80 font-bold leading-relaxed italic px-4">
+                                    "{t.thanksMsg}"
+                                </p>
                             </div>
                         </div>
                     )}
